@@ -81,6 +81,11 @@ def run_strategy(config):
         config,
     )
 
+    print(type(equity_df))
+    print(equity_df.shape)
+    print(equity_df.columns)
+    print(equity_df.head())
+
     metrics = calculate_metrics(
         equity_df,
         trades_df,
