@@ -27,13 +27,13 @@ BLUE_CHIPS = [
 
 TOP_LIQUID = [
     "SBER",
-    "GAZP",
-    "LKOH",
+    # "GAZP",
+    # "LKOH",
     "ROSN",
     "NVTK",
-    "TCSG",
-    "YDEX",
-    "MAGN",
+    # "TCSG",
+    # "YDEX",
+    # "MAGN",
     "CHMF",
     "VTBR",
     "MOEX",

@@ -1,12 +1,14 @@
 def add_momentum_score(df):
 
-    df["ret_20"] = df["close"] / df["close"].shift(20)
+    df["ret_20"] = df["close"] / df["close"].shift(20) - 1
 
-    df["ret_60"] = df["close"] / df["close"].shift(60)
+    df["ret_60"] = df["close"] / df["close"].shift(60) - 1
 
-    df["ret_120"] = df["close"] / df["close"].shift(120)
+    df["ret_120"] = df["close"] / df["close"].shift(120) - 1
 
-    df["ret_180"] = df["close"] / df["close"].shift(180)
+    df["ret_180"] = df["close"] / df["close"].shift(180) - 1
+
+    df["relative_strength"] = df["close"] / df["close"].shift(20)
 
     df["momentum_score"] = (
         df["ret_20"] * 0.4
@@ -15,12 +17,9 @@ def add_momentum_score(df):
         + df["ret_180"] * 0.1
     )
 
-    return df
+    df["volatility_penalty"] = df["atr_mean"] / df["close"]
 
-
-def add_relative_strength(df):
-
-    df["relative_strength"] = df["close"] / df["close"].shift(20)
+    df["momentum_score"] = df["momentum_score"] / (1 + df["volatility_penalty"])
 
     return df
 
@@ -42,6 +41,7 @@ def add_trend_signal(df):
         & (df["ema_200_slope"])
         & (df["high_volatility"])
         & (df["strong_trend"])
+        & (df["momentum_score"] > 0)
     )
 
     return df
@@ -50,8 +50,6 @@ def add_trend_signal(df):
 def build_signals(df):
 
     df = add_momentum_score(df)
-
-    df = add_relative_strength(df)
 
     df = add_breakout_signal(df)
 

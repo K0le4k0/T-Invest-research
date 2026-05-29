@@ -39,92 +39,88 @@ from strategies.liquid_momentum.config import (
 # LOAD DATA
 # =========================
 
-START_DATE = "2021-03-01"
 
-dataframes = {}
+def run_strategy(config):
 
-df = load_data("IMOEX")
+    START_DATE = "2021-03-01"
 
-df = resample_timeframe(
-    df,
-    "1h",
-)
+    dataframes = {}
 
-df = df.loc[START_DATE:]
+    df = load_data("IMOEX")
 
-dataframes["IMOEX"] = df
+    df = resample_timeframe(
+        df,
+        "1h",
+    )
 
-for ticker in TOP_LIQUID:
+    df = df.loc[START_DATE:]
 
-    print(f"Loading {ticker}")
+    dataframes["IMOEX"] = df
 
-    try:
+    for ticker in TOP_LIQUID:
 
-        df = load_data(ticker)
+        try:
 
-        df = resample_timeframe(
-            df,
-            "1h",
-        )
+            df = load_data(ticker)
 
-        df = df.loc[START_DATE:]
+            df = resample_timeframe(
+                df,
+                "1h",
+            )
 
-        dataframes[ticker] = df
+            df = df.loc[START_DATE:]
 
-    except Exception as e:
+            dataframes[ticker] = df
 
-        print(f"Ошибка {ticker}: {e}")
+        except Exception as e:
 
-# =========================
-# RUN ENGINE
-# =========================
+            print(f"Ошибка {ticker}: {e}")
 
-equity_df, trades_df = run_backtest(
-    dataframes,
-    CONFIG,
-)
+    equity_df, trades_df = run_backtest(
+        dataframes,
+        config,
+    )
 
-# =========================
-# METRICS
-# =========================
+    metrics = calculate_metrics(
+        equity_df,
+        trades_df,
+    )
 
-metrics = calculate_metrics(
-    equity_df,
-    trades_df,
-)
+    return (
+        metrics,
+        equity_df,
+        trades_df,
+    )
 
-print()
-print("========== RESULT ==========")
 
-for key, value in metrics.items():
+if __name__ == "__main__":
 
-    print(f"{key}: " f"{round(value, 4)}")
+    metrics, equity_df, trades_df = run_strategy(CONFIG)
 
-# =========================
-# ANALYTICS
-# =========================
+    print()
+    print("========== RESULT ==========")
 
-print_analytics(
-    trades_df,
-    equity_df,
-)
+    for key, value in metrics.items():
 
-# =========================
-# PLOT
-# =========================
+        print(f"{key}: {round(value, 4)}")
 
-plt.figure(figsize=(14, 7))
+    print_analytics(
+        trades_df,
+        equity_df,
+    )
 
-plt.plot(
-    equity_df["time"],
-    equity_df["equity"],
-    label="TOP_LIQUID",
-)
+    plt.figure(figsize=(14, 7))
 
-plt.title("Liquid Momentum")
+    plt.plot(
+        equity_df["time"],
+        equity_df["equity"],
+        label="TOP_LIQUID",
+    )
 
-plt.legend()
+    plt.title("Liquid Momentum")
 
-plt.grid()
+    plt.legend()
 
-plt.show()
+    plt.grid()
+
+    plt.show()

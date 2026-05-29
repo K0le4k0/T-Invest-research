@@ -1,20 +1,21 @@
 def calculate_equity(
     capital,
     open_positions,
-    row,
+    latest_prices,
 ):
 
     current_equity = capital
 
     for position in open_positions:
 
-        if row.ticker == position["ticker"]:
+        ticker = position["ticker"]
 
-            current_equity += position["size"] * (row.close / position["entry_price"])
+        if ticker not in latest_prices:
+            continue
 
-        else:
+        current_price = latest_prices[ticker]
 
-            current_equity += position["size"]
+        current_equity += position["size"] * current_price / position["entry_price"]
 
     return current_equity
 
@@ -43,15 +44,6 @@ def get_dynamic_max_positions(
     drawdown,
     default_positions,
 ):
-
-    if drawdown < -0.05:
-
-        return 5
-
-    if drawdown < -0.03:
-
-        return 10
-
     return default_positions
 
 

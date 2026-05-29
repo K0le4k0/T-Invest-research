@@ -19,11 +19,8 @@ def atr_trailing_stop(
     return position["highest_price"] - (row.atr_14 * atr_multiplier)
 
 
-def ema_exit(
-    row,
-):
-
-    return row.close < row.ema_50
+def ema_exit(row):
+    return row.close < row.ema_200
 
 
 def time_exit(

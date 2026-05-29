@@ -1,4 +1,6 @@
 import pandas as pd
+import os
+import json
 
 
 def print_analytics(
@@ -8,6 +10,7 @@ def print_analytics(
 
     print()
     print("========== ANALYTICS ==========")
+    os.makedirs("results", exist_ok=True)
 
     # =========================
     # YEARLY RETURNS
@@ -69,7 +72,25 @@ def print_analytics(
 
     for ticker, pnl in top_tickers.items():
 
-        print(f"{ticker}: " f"{round(pnl, 2)}")
+        ticker_trades = trades_df[trades_df["ticker"] == ticker]
+
+        print(
+            ticker,
+            "count:",
+            len(ticker_trades),
+            "avg:",
+            round(ticker_trades["pnl"].mean(), 2),
+            "sum:",
+            round(ticker_trades["pnl"].sum(), 2),
+        )
+
+    trade_counts = trades_df.groupby("ticker").size()
+
+    print()
+    print("TRADES PER TICKER")
+
+    for ticker, count in trade_counts.items():
+        print(f"{ticker}: {count}")
 
     # =========================
     # WORST TICKERS
@@ -83,3 +104,27 @@ def print_analytics(
     for ticker, pnl in worst_tickers.items():
 
         print(f"{ticker}: " f"{round(pnl, 2)}")
+
+    print()
+
+    # =========================
+    # SAVE FILES
+    # =========================
+
+    trades_df.to_csv("results/trades.csv", index=False)
+
+    equity_df.to_csv("results/equity.csv", index=False)
+
+    summary = {
+        "final_equity": float(equity_df["equity"].iloc[-1]),
+        "trades_count": int(len(trades_df)),
+        "best_trade": float(trades_df["pnl"].max()),
+        "worst_trade": float(trades_df["pnl"].min()),
+        "avg_trade": float(trades_df["pnl"].mean()),
+    }
+
+    with open("results/summary.json", "w", encoding="utf-8") as f:
+
+        json.dump(summary, f, indent=4, ensure_ascii=False)
+
+    print("FILES SAVED -> results/")

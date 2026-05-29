@@ -40,9 +40,6 @@ def run_backtest(
 
     market_df = dataframes["IMOEX"]
 
-    print("IMOEX")
-    print(market_df.index[:5])
-
     market_df = add_ema(
         market_df,
         config["ema_trend"],
@@ -86,21 +83,11 @@ def run_backtest(
 
         df["market_trend"] = market_df["market_trend"].reindex(df.index).ffill()
 
-        print(ticker, df["market_trend"].isna().sum())
-
         df["ticker"] = ticker
 
         all_signals.append(df)
 
-        print(ticker)
-        print(df.index[:5])
-
     signals_df = pd.concat(all_signals)
-
-    print()
-    print(signals_df.head())
-
-    print(signals_df.columns.tolist())
 
     # =====================
     # RANKING
@@ -112,13 +99,23 @@ def run_backtest(
         .head(config["top_n"])
     )
 
+    latest_time = signals_df.index.max()
+
+    latest_rows = signals_df.loc[[latest_time]]
+
     # =====================
     # PORTFOLIO
     # =====================
 
-    print(signals_df[["ticker", "momentum_score"]].head(50))
+    market_df = pd.concat(all_signals)
+
+    market_lookup = {(idx, row.ticker): row for idx, row in market_df.iterrows()}
+
+    all_times = sorted(market_df.index.unique())
 
     capital = config["initial_capital"]
+
+    latest_prices = {}
 
     open_positions = []
 
@@ -128,151 +125,19 @@ def run_backtest(
 
     equity_peak = capital
 
+    signals_count = 0
+    entries_count = 0
+
     # =====================
     # MAIN LOOP
     # =====================
 
-    for row in signals_df.itertuples():
-
-        current_time = row.Index
-
-        # =====================
-        # UPDATE HIGHS
-        # =====================
-
-        for position in open_positions:
-
-            if row.ticker == position["ticker"]:
-
-                position = update_highest_price(
-                    row,
-                    position,
-                )
-
-        # =====================
-        # EQUITY
-        # =====================
-
-        current_equity = calculate_equity(
-            capital,
-            open_positions,
-            row,
-        )
-
-        # =====================
-        # EQUITY PEAK
-        # =====================
-
-        equity_peak = update_equity_peak(
-            current_equity,
-            equity_peak,
-        )
-
-        # =====================
-        # DRAWDOWN
-        # =====================
-
-        drawdown = calculate_drawdown(
-            current_equity,
-            equity_peak,
-        )
-
-        # =====================
-        # EXPOSURE
-        # =====================
-
-        dynamic_max_positions = get_dynamic_max_positions(
-            drawdown,
-            config["max_positions"],
-        )
-
-        # =====================
-        # EXITS
-        # =====================
-
-        positions_to_close = []
-
-        for position in open_positions:
-
-            if row.ticker != position["ticker"]:
-
-                continue
-
-            if check_exit(
-                row,
-                position,
-            ):
-
-                exit_price = row.close
-
-                capital, pnl = close_position(
-                    position,
-                    exit_price,
-                    capital,
-                )
-
-                closed_trades.append(
-                    {
-                        "ticker": position["ticker"],
-                        "entry_time": position["entry_time"],
-                        "exit_time": current_time,
-                        "pnl": pnl,
-                    }
-                )
-
-                positions_to_close.append(position)
-
-        for position in positions_to_close:
-
-            open_positions.remove(position)
-
-        # =====================
-        # ENTRIES
-        # =====================
-
-        already_open = any(p["ticker"] == row.ticker for p in open_positions)
-
-        if (
-            len(open_positions) < dynamic_max_positions
-            and not already_open
-            and row.trend_signal
-            and row.market_trend
-        ):
-
-            position_size = calculate_position_size(
-                capital,
-                row.atr_14,
-                row.close,
-            )
-
-            position_size = apply_exposure_limit(
-                position_size,
-                capital,
-            )
-
-            capital = open_position(
-                open_positions,
-                capital,
-                row.ticker,
-                current_time,
-                row.close,
-                position_size,
-            )
-
-        # =====================
-        # EQUITY CURVE
-        # =====================
-
-        equity_curve.append(
-            {
-                "time": current_time,
-                "equity": current_equity,
-                "open_positions": len(open_positions),
-            }
-        )
-
     equity_df = pd.DataFrame(equity_curve)
 
     trades_df = pd.DataFrame(closed_trades)
+
+    print()
+    print("SIGNALS:", signals_count)
+    print("ENTRIES:", entries_count)
 
     return equity_df, trades_df
