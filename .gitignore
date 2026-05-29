@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+
+# Environment
+.env
+
+# Market data
+market_data/
+
+# Jupyter
+.ipynb_checkpoints/
