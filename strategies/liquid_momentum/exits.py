@@ -13,10 +13,10 @@ def update_highest_price(
 def atr_trailing_stop(
     row,
     position,
-    atr_multiplier=3,
+    config,
 ):
 
-    return position["highest_price"] - (row.atr_14 * atr_multiplier)
+    return position["highest_price"] - (row.atr_14 * config["atr_multiplier"])
 
 
 def ema_exit(row):
@@ -37,11 +37,13 @@ def time_exit(
 def check_exit(
     row,
     position,
+    config,
 ):
 
     atr_stop = atr_trailing_stop(
         row,
         position,
+        config,
     )
 
     atr_exit = row.close < atr_stop

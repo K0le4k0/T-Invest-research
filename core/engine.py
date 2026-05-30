@@ -173,6 +173,7 @@ def run_backtest(
             if check_exit(
                 market_row,
                 position,
+                config,
             ):
 
                 exit_price = market_row.close
@@ -188,6 +189,9 @@ def run_backtest(
                         "ticker": position["ticker"],
                         "entry_time": position["entry_time"],
                         "exit_time": current_time,
+                        "entry_price": position["entry_price"],
+                        "exit_price": exit_price,
+                        "highest_price": position["highest_price"],
                         "pnl": pnl,
                     }
                 )

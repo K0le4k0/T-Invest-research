@@ -4,6 +4,7 @@ CONFIG = {
     "ema_slow": 50,
     "ema_trend": 200,
     "atr_period": 14,
-    "max_positions": 3,
-    "top_n": 3,
+    "atr_multiplier": 3.75,
+    "max_positions": 1,
+    "top_n": 2,
 }
